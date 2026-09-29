@@ -14,4 +14,3 @@ dependencyResolutionManagement {
 }
 rootProject.name = "HumanTypingIME"
 include ':app'
-include ':mock-location-test'
