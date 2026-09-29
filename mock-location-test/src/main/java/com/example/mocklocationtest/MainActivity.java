@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
+import android.location.provider.ProviderProperties;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.Settings;
@@ -94,7 +95,7 @@ public final class MainActivity extends Activity {
             }
             try {
                 locationManager.addTestProvider(provider, false, false, false, false,
-                        true, true, true, Criteria.POWER_LOW, Criteria.ACCURACY_FINE);
+                        true, true, true, ProviderProperties.POWER_USAGE_LOW, ProviderProperties.ACCURACY_FINE);
             } catch (IllegalArgumentException ignored) {
                 // The provider already exists as a test provider.
             }
