@@ -5,6 +5,8 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.google.mlkit.genai.common.FeatureStatus;
+import com.google.mlkit.genai.common.DownloadCallback;
+import com.google.mlkit.genai.common.GenAiException;
 import com.google.mlkit.genai.rewriting.Rewriter;
 import com.google.mlkit.genai.rewriting.RewriterOptions;
 import com.google.mlkit.genai.rewriting.Rewriting;
@@ -44,17 +46,46 @@ public class AiRewriteManager {
     public void checkAvailability(Consumer<Boolean> onResult) {
         executor.execute(() -> {
             Rewriter rewriter = null;
+            boolean downloadPending = false;
             try {
                 rewriter = Rewriting.getClient(RewriterOptions.builder(ctx).build());
-                available = rewriter.checkFeatureStatus().get() == FeatureStatus.AVAILABLE;
+                int status = rewriter.checkFeatureStatus().get();
+                if (status == FeatureStatus.AVAILABLE) {
+                    available = true;
+                    finishAvailability(onResult);
+                } else if (status == FeatureStatus.DOWNLOADABLE) {
+                    downloadPending = true;
+                    final Rewriter downloadRewriter = rewriter;
+                    rewriter.downloadFeature(new DownloadCallback() {
+                        @Override public void onDownloadStarted(long bytesToDownload) { }
+                        @Override public void onDownloadProgress(long totalBytesDownloaded) { }
+                        @Override public void onDownloadCompleted() {
+                            available = true;
+                            finishAvailability(onResult);
+                            downloadRewriter.close();
+                        }
+                        @Override public void onDownloadFailed(GenAiException e) {
+                            available = false;
+                            finishAvailability(onResult);
+                            downloadRewriter.close();
+                        }
+                    });
+                } else {
+                    available = false;
+                    finishAvailability(onResult);
+                }
             } catch (Exception ignored) {
                 available = false;
+                finishAvailability(onResult);
             } finally {
-                if (rewriter != null) rewriter.close();
+                if (rewriter != null && !downloadPending) rewriter.close();
             }
-            checked = true;
-            if (onResult != null) main.post(() -> onResult.accept(available));
         });
+    }
+
+    private void finishAvailability(Consumer<Boolean> onResult) {
+        checked = true;
+        if (onResult != null) main.post(() -> onResult.accept(available));
     }
 
     public boolean isAvailable() {

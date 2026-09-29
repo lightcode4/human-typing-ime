@@ -14,6 +14,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.mlkit.genai.common.FeatureStatus;
+import com.google.mlkit.genai.common.DownloadCallback;
+import com.google.mlkit.genai.common.GenAiException;
 import com.google.mlkit.genai.rewriting.Rewriter;
 import com.google.mlkit.genai.rewriting.RewriterOptions;
 import com.google.mlkit.genai.rewriting.Rewriting;
@@ -65,17 +67,42 @@ public class SafeRewriteActivity extends AppCompatActivity {
             try {
                 availabilityRewriter = Rewriting.getClient(optionsFor(0));
                 int featureStatus = availabilityRewriter.checkFeatureStatus().get();
-                available = featureStatus == FeatureStatus.AVAILABLE;
-                runOnUiThread(() -> {
-                    status.setText(available
-                            ? "On-device rewriting is ready. Your draft stays on this device."
-                            : "On-device rewriting is not available on this device.");
-                    rewrite.setEnabled(available);
-                });
-            } catch (Exception ignored) {
-                runOnUiThread(() -> status.setText("On-device rewriting is not available on this device."));
+                if (featureStatus == FeatureStatus.AVAILABLE) {
+                    markAvailable();
+                } else if (featureStatus == FeatureStatus.DOWNLOADABLE) {
+                    runOnUiThread(() -> status.setText("Downloading the on-device rewrite model…"));
+                    availabilityRewriter.downloadFeature(new DownloadCallback() {
+                        @Override public void onDownloadStarted(long bytesToDownload) { }
+                        @Override public void onDownloadProgress(long totalBytesDownloaded) { }
+                        @Override public void onDownloadCompleted() { markAvailable(); }
+                        @Override public void onDownloadFailed(GenAiException e) {
+                            showAvailabilityError(e);
+                        }
+                    });
+                } else if (featureStatus == FeatureStatus.DOWNLOADING) {
+                    runOnUiThread(() -> status.setText("The on-device rewrite model is still downloading. Try again shortly."));
+                } else {
+                    showAvailabilityError(null);
+                }
+            } catch (Exception e) {
+                showAvailabilityError(e);
             }
         });
+    }
+
+    private void markAvailable() {
+        available = true;
+        runOnUiThread(() -> {
+            status.setText("On-device rewriting is ready. Your draft stays on this device.");
+            rewrite.setEnabled(true);
+        });
+    }
+
+    private void showAvailabilityError(Throwable error) {
+        available = false;
+        String detail = error == null ? "This device or its AICore model does not support rewriting." :
+                (error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage());
+        runOnUiThread(() -> status.setText("Rewrite unavailable: " + detail));
     }
 
     private void createSuggestion() {
@@ -105,9 +132,10 @@ public class SafeRewriteActivity extends AppCompatActivity {
                 String suggestion = result.getResults().isEmpty() ? ""
                         : result.getResults().get(0).getText();
                 runOnUiThread(() -> showSuggestion(suggestion));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
                 runOnUiThread(() -> {
-                    status.setText("Could not create a suggestion. Try again later.");
+                    String detail = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+                    status.setText("Rewrite failed: " + detail);
                     rewrite.setEnabled(available);
                 });
             } finally {
