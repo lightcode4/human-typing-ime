@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Human Typing IME</string>
+    <string name="enable_ime">Enable in Settings</string>
+    <string name="select_ime">Select Active Keyboard</string>
+</resources>

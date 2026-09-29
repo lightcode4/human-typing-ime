@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/bg_keyboard"
+    android:padding="@dimen/space_s">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout android:id="@+id/btn_type_clipboard" style="@style/ImeKeyButton" android:layout_weight="1.2" android:contentDescription="Type clipboard text">
+            <ImageView style="@style/ImeKeyIcon" android:src="@drawable/ic_send" app:tint="@color/accent" android:contentDescription="@null" />
+            <TextView style="@style/ImeKeyLabel" android:text="Type" android:textColor="@color/accent" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/btn_history" style="@style/ImeKeyButton" android:layout_weight="1" android:contentDescription="Clipboard history">
+            <ImageView style="@style/ImeKeyIcon" android:src="@drawable/ic_history" app:tint="@color/text_primary" android:contentDescription="@null" />
+            <TextView style="@style/ImeKeyLabel" android:text="History" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/btn_templates" style="@style/ImeKeyButton" android:layout_weight="1" android:contentDescription="Templates">
+            <ImageView style="@style/ImeKeyIcon" android:src="@drawable/ic_template" app:tint="@color/text_primary" android:contentDescription="@null" />
+            <TextView style="@style/ImeKeyLabel" android:text="Templates" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/btn_stop" style="@style/ImeKeyButton" android:layout_weight="0.9" android:contentDescription="Stop typing">
+            <ImageView style="@style/ImeKeyIcon" android:src="@drawable/ic_stop" app:tint="@color/danger" android:contentDescription="@null" />
+            <TextView style="@style/ImeKeyLabel" android:text="Stop" android:textColor="@color/danger" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xs"
+        android:orientation="horizontal">
+        <LinearLayout android:id="@+id/btn_vault" style="@style/ImeKeyButton" android:layout_weight="1" android:contentDescription="Vault">
+            <ImageView style="@style/ImeKeyIcon" android:src="@drawable/ic_lock" app:tint="@color/text_primary" android:contentDescription="@null" />
+            <TextView style="@style/ImeKeyLabel" android:text="Vault" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/btn_mic" style="@style/ImeKeyButton" android:layout_weight="2" android:longClickable="false" android:contentDescription="Hold to speak">
+            <ImageView style="@style/ImeKeyIcon" android:src="@drawable/ic_mic" app:tint="@color/text_primary" android:contentDescription="@null" />
+            <TextView style="@style/ImeKeyLabel" android:text="Hold to speak" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/btn_backspace" style="@style/ImeKeyButton" android:layout_weight="1" android:contentDescription="Delete">
+            <ImageView style="@style/ImeKeyIcon" android:src="@drawable/ic_backspace" app:tint="@color/text_primary" android:contentDescription="@null" />
+            <TextView style="@style/ImeKeyLabel" android:text="Delete" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/btn_rewrite" style="@style/ImeKeyButton" android:layout_weight="1" android:contentDescription="Rewrite with on-device AI">
+            <ImageView style="@style/ImeKeyIcon" android:src="@drawable/ic_auto" app:tint="@color/text_primary" android:contentDescription="@null" />
+            <TextView style="@style/ImeKeyLabel" android:text="Rewrite" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/btn_settings" style="@style/ImeKeyButton" android:layout_weight="1" android:contentDescription="Settings">
+            <ImageView style="@style/ImeKeyIcon" android:src="@drawable/ic_settings" app:tint="@color/text_primary" android:contentDescription="@null" />
+            <TextView style="@style/ImeKeyLabel" android:text="Settings" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

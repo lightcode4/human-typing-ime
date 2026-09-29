@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/bg_root" android:fillViewport="true">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/space_l">
+    <ImageView android:layout_width="72dp" android:layout_height="72dp" android:layout_gravity="center_horizontal" android:layout_marginTop="@dimen/space_l" android:src="@drawable/ic_launcher_foreground" android:contentDescription="@null"/>
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:layout_marginTop="@dimen/space_m" android:text="Human Typing" android:textColor="@color/text_primary" android:textSize="22sp" android:textStyle="bold"/>
+    <TextView android:id="@+id/tv_version" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:textColor="@color/text_secondary" android:textSize="@dimen/subtitle_size"/>
+    <TextView style="@style/SectionHeader" android:text="FEATURES"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:lineSpacingExtra="6dp" android:text="Clipboard typing, history, templates, encrypted vault, voice input, and configurable typing preferences." android:textColor="@color/text_primary" android:textSize="@dimen/body_size"/>
+    <TextView style="@style/SectionHeader" android:text="PRIVACY"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:lineSpacingExtra="6dp" android:text="App data stays on this device. Vault items are encrypted with a key stored in Android Keystore." android:textColor="@color/text_primary" android:textSize="@dimen/body_size"/>
+    <TextView style="@style/SectionHeader" android:text="ABOUT THE DEVELOPER"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Scott Omedo Omoviro" android:textColor="@color/text_primary" android:textSize="@dimen/body_size" android:textStyle="bold"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_s" android:orientation="horizontal">
+      <ImageButton android:id="@+id/btn_github" android:layout_width="48dp" android:layout_height="48dp" android:background="@drawable/bg_key" android:contentDescription="GitHub profile" android:padding="8dp" android:src="@drawable/ic_github"/>
+      <ImageButton android:id="@+id/btn_x" android:layout_width="48dp" android:layout_height="48dp" android:layout_marginLeft="@dimen/space_s" android:background="@drawable/bg_key" android:contentDescription="X profile" android:padding="8dp" android:src="@drawable/ic_x"/>
+    </LinearLayout>
+  </LinearLayout>
+</ScrollView>

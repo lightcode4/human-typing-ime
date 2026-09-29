@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_root">#F7F7FA</color><color name="bg_surface">#FFFFFF</color><color name="bg_surface_high">#F0F1F5</color>
+    <color name="bg_keyboard">#ECEEF3</color><color name="divider">#D7D9E0</color>
+    <color name="text_primary">#1B1D23</color><color name="text_secondary">#5E6370</color>
+    <color name="accent">#A96200</color><color name="accent_dim">#F4D6AC</color><color name="accent_on">#FFFFFF</color>
+    <color name="danger">#BE252B</color><color name="success">#1E8E3E</color>
+    <color name="key_bg">#FFFFFF</color><color name="key_bg_pressed">#DDE0E7</color>
+</resources>

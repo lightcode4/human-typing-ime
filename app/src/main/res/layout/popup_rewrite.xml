@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_popup"
+    android:padding="@dimen/space_s">
+
+    <TextView
+        android:id="@+id/tv_rewrite_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/space_m"
+        android:paddingVertical="@dimen/space_s"
+        android:text="Rewriting…"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/rewrite_professional"
+        style="@style/RewriteOption"
+        android:text="Professional"/>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="@color/divider"/>
+
+    <TextView
+        android:id="@+id/rewrite_friendly"
+        style="@style/RewriteOption"
+        android:text="Friendly"/>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="@color/divider"/>
+
+    <TextView
+        android:id="@+id/rewrite_shorter"
+        style="@style/RewriteOption"
+        android:text="Shorter"/>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="@color/divider"/>
+
+    <TextView
+        android:id="@+id/rewrite_longer"
+        style="@style/RewriteOption"
+        android:text="Longer"/>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="@color/divider"/>
+
+    <TextView
+        android:id="@+id/rewrite_rephrase"
+        style="@style/RewriteOption"
+        android:text="Rephrase"/>
+</LinearLayout>

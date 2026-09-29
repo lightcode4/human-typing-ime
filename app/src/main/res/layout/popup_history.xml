@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_popup"
+    android:padding="@dimen/space_s">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Clipboard History"
+        android:textColor="@color/text_primary"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:paddingLeft="@dimen/space_s"
+        android:paddingTop="@dimen/space_m"
+        android:paddingRight="@dimen/space_s"
+        android:paddingBottom="@dimen/space_m" />
+    <ListView
+        android:id="@+id/lv_history"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        android:divider="@color/divider"
+        android:dividerHeight="1dp"
+        android:scrollbars="none"
+        android:overScrollMode="never" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="@dimen/space_s"
+        android:background="@color/divider" />
+    <TextView
+        android:id="@+id/btn_clear_history"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_ripple"
+        android:gravity="center"
+        android:text="Clear History"
+        android:textColor="@color/danger"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:clickable="true"
+        android:focusable="true" />
+</LinearLayout>

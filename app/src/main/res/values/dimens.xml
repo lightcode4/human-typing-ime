@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="space_xs">4dp</dimen><dimen name="space_s">8dp</dimen>
+    <dimen name="space_m">16dp</dimen><dimen name="space_l">24dp</dimen>
+    <dimen name="radius_s">8dp</dimen><dimen name="radius_m">12dp</dimen>
+    <dimen name="key_min_height">48dp</dimen>
+    <dimen name="title_size">24sp</dimen><dimen name="subtitle_size">14sp</dimen>
+    <dimen name="body_size">15sp</dimen><dimen name="label_size">12sp</dimen>
+</resources>

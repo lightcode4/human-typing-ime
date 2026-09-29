@@ -1,0 +1,21 @@
+keystore.properties
+*.jks
+*.keystore
+
+# Local machine and IDE state
+local.properties
+.idea/
+*.iml
+.gradle/
+.android-user/
+.gradle-user/
+
+# Generated Android output
+build/
+*/build/
+
+# Generated site archives and nested deployment checkout
+store/privacy-site/.git/
+store/privacy-site/
+store/privacy-site/*.zip
+store/privacy-site/*.tar.gz

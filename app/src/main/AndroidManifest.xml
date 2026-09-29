@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.HumanTypingIME">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".PermissionActivity"
+            android:label="Permissions"
+            android:exported="false" />
+
+        <activity
+            android:name=".SettingsActivity"
+            android:label="Typing Settings"
+            android:exported="false" />
+
+        <activity
+            android:name=".VaultActivity"
+            android:label="Vault"
+            android:exported="false" />
+
+        <activity android:name=".AboutActivity" android:exported="false" />
+        <activity android:name=".ClipboardManagerActivity" android:exported="false" />
+        <activity android:name=".SafeRewriteActivity"
+            android:label="Rewrite draft"
+            android:exported="false" />
+        <activity android:name=".BehavioralEnrollActivity"
+            android:label="Typing rhythm profile"
+            android:exported="false" />
+
+        <service
+            android:name=".HumanTypingIME"
+            android:label="Human Typing IME"
+            android:permission="android.permission.BIND_INPUT_METHOD"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
+
+        <service
+            android:name=".TypingForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+    </application>
+</manifest>

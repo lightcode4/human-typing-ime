@@ -1,0 +1,55 @@
+<resources>
+    <style name="Theme.HumanTypingIME" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/bg_root</item>
+        <item name="android:statusBarColor">@color/bg_root</item>
+        <item name="android:navigationBarColor">@color/bg_root</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+    </style>
+    <style name="SectionHeader"><item name="android:layout_width">wrap_content</item><item name="android:layout_height">wrap_content</item><item name="android:layout_marginTop">@dimen/space_l</item><item name="android:layout_marginBottom">@dimen/space_s</item><item name="android:textColor">@color/text_secondary</item><item name="android:textSize">@dimen/label_size</item><item name="android:letterSpacing">0.12</item><item name="android:textStyle">bold</item></style>
+    <style name="SettingCard"><item name="android:layout_width">match_parent</item><item name="android:layout_height">wrap_content</item><item name="android:orientation">horizontal</item><item name="android:background">@drawable/bg_card</item><item name="android:padding">@dimen/space_m</item><item name="android:layout_marginBottom">@dimen/space_s</item><item name="android:clickable">true</item><item name="android:focusable">true</item><item name="android:foreground">?android:attr/selectableItemBackground</item></style>
+    <style name="ImeKey"><item name="android:layout_width">0dp</item><item name="android:layout_height">@dimen/key_min_height</item><item name="android:layout_marginHorizontal">@dimen/space_xs</item><item name="android:background">@drawable/bg_key</item><item name="android:gravity">center</item><item name="android:textColor">@color/text_primary</item><item name="android:textSize">@dimen/body_size</item><item name="android:clickable">true</item><item name="android:focusable">true</item></style>
+    <style name="ImeKeyPrimary" parent="ImeKey"><item name="android:background">@drawable/bg_key_accent</item><item name="android:textColor">@color/accent_on</item><item name="android:textStyle">bold</item></style>
+    <style name="ImeKeyDanger" parent="ImeKey"><item name="android:textColor">@color/danger</item></style>
+    <style name="ImeKeyButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:layout_marginHorizontal">@dimen/space_xs</item>
+        <item name="android:background">@drawable/bg_key</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+    </style>
+    <style name="ImeKeyIcon">
+        <item name="android:layout_width">22dp</item>
+        <item name="android:layout_height">22dp</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+    </style>
+    <style name="ImeKeyLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:singleLine">true</item>
+    </style>
+    <style name="RewriteOption">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingHorizontal">@dimen/space_m</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+</resources>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="6dp"
+    android:background="@drawable/bg_card"
+    android:orientation="horizontal"
+    android:padding="@dimen/space_m">
+
+    <!-- Left: state icon (pin / check / history) -->
+    <ImageView
+        android:id="@+id/icon_kind"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="2dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_history"
+        app:tint="@color/text_secondary"/>
+
+    <!-- Middle: text + meta -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_m"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:lineSpacingExtra="3dp"
+            android:maxLines="4"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/tv_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp"/>
+    </LinearLayout>
+
+    <!-- Right: todo check, only shown when the left icon is busy showing the pin -->
+    <ImageView
+        android:id="@+id/icon_todo"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginStart="@dimen/space_s"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_check"
+        app:tint="@color/success"
+        android:visibility="gone"/>
+</LinearLayout>

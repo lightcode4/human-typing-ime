@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="220dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_popup"
+    android:padding="@dimen/space_s">
+    <TextView android:id="@+id/menu_backspace" android:layout_width="match_parent" android:layout_height="48dp" android:background="?android:attr/selectableItemBackground" android:gravity="center_vertical" android:paddingLeft="@dimen/space_m" android:paddingRight="@dimen/space_m" android:text="Backspace one" android:textColor="@color/text_primary" android:textSize="14sp" android:clickable="true" android:focusable="true"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
+    <TextView android:id="@+id/menu_delete_word" android:layout_width="match_parent" android:layout_height="48dp" android:background="?android:attr/selectableItemBackground" android:gravity="center_vertical" android:paddingLeft="@dimen/space_m" android:paddingRight="@dimen/space_m" android:text="Delete word" android:textColor="@color/text_primary" android:textSize="14sp" android:clickable="true" android:focusable="true"/>
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider"/>
+    <TextView android:id="@+id/menu_clear_field" android:layout_width="match_parent" android:layout_height="48dp" android:background="?android:attr/selectableItemBackground" android:gravity="center_vertical" android:paddingLeft="@dimen/space_m" android:paddingRight="@dimen/space_m" android:text="Clear field" android:textColor="@color/danger" android:textSize="14sp" android:clickable="true" android:focusable="true"/>
+</LinearLayout>

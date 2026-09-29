@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@color/bg_keyboard" android:padding="@dimen/space_m">
+ <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+  <TextView android:id="@+id/focus_btn_type" style="@style/ImeKeyPrimary" android:layout_width="0dp" android:layout_height="72dp" android:layout_weight="1" android:text="Type clipboard"/>
+  <TextView android:id="@+id/focus_btn_stop" style="@style/ImeKeyDanger" android:layout_width="0dp" android:layout_height="72dp" android:layout_weight="1" android:text="Stop"/>
+ </LinearLayout>
+ <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_s" android:orientation="horizontal">
+  <TextView android:id="@+id/focus_btn_backspace" style="@style/ImeKey" android:layout_width="0dp" android:layout_height="64dp" android:layout_weight="1" android:text="Delete"/>
+  <TextView android:id="@+id/focus_btn_more" style="@style/ImeKey" android:layout_width="0dp" android:layout_height="64dp" android:layout_weight="1" android:text="Settings"/>
+ </LinearLayout>
+</LinearLayout>
