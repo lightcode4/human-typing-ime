@@ -27,6 +27,7 @@ import java.util.concurrent.Executors;
 
 /** A separate, review-and-copy-only workspace for on-device rewriting. */
 public class SafeRewriteActivity extends AppCompatActivity {
+    private static final int MAX_REWRITE_CHARS = 600;
     private static final String[] STYLES = {
             "Professional", "Friendly", "Shorter", "More detailed", "Rephrase"
     };
@@ -111,8 +112,8 @@ public class SafeRewriteActivity extends AppCompatActivity {
             input.setError("Enter a draft first.");
             return;
         }
-        if (draft.length() > 1_000) {
-            input.setError("Use a shorter draft (up to about 1,000 characters).");
+        if (draft.length() > MAX_REWRITE_CHARS) {
+            input.setError("Use a shorter draft (up to " + MAX_REWRITE_CHARS + " characters).");
             return;
         }
         if (!available) {

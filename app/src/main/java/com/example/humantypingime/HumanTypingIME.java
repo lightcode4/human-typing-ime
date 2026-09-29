@@ -58,7 +58,9 @@ public class HumanTypingIME extends InputMethodService {
     public static final float DEF_TYPO_PROB = 0.020f;
 
     private static final int LONG_TEXT_THRESHOLD = 500;
-    private static final int REWRITE_MAX_CHARS = 1000;
+    // ML Kit GenAI rewriting accepts short text (<256 tokens); keep a safe
+    // character ceiling so long prompts do not reach AICore and fail inference.
+    private static final int REWRITE_MAX_CHARS = 600;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Random random = new Random();
