@@ -69,13 +69,21 @@ public class SafeRewriteActivity extends AppCompatActivity {
                 availabilityRewriter = Rewriting.getClient(optionsFor(0));
                 int featureStatus = availabilityRewriter.checkFeatureStatus().get();
                 if (featureStatus == FeatureStatus.AVAILABLE) {
+                    availabilityRewriter.prepareInferenceEngine().get();
                     markAvailable();
                 } else if (featureStatus == FeatureStatus.DOWNLOADABLE) {
                     runOnUiThread(() -> status.setText("Downloading the on-device rewrite model…"));
                     availabilityRewriter.downloadFeature(new DownloadCallback() {
                         @Override public void onDownloadStarted(long bytesToDownload) { }
                         @Override public void onDownloadProgress(long totalBytesDownloaded) { }
-                        @Override public void onDownloadCompleted() { markAvailable(); }
+                        @Override public void onDownloadCompleted() {
+                            try {
+                                availabilityRewriter.prepareInferenceEngine().get();
+                                markAvailable();
+                            } catch (Exception e) {
+                                showAvailabilityError(e);
+                            }
+                        }
                         @Override public void onDownloadFailed(GenAiException e) {
                             showAvailabilityError(e);
                         }

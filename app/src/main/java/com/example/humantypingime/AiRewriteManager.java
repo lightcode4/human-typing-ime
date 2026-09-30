@@ -51,6 +51,7 @@ public class AiRewriteManager {
                 rewriter = Rewriting.getClient(RewriterOptions.builder(ctx).build());
                 int status = rewriter.checkFeatureStatus().get();
                 if (status == FeatureStatus.AVAILABLE) {
+                    rewriter.prepareInferenceEngine().get();
                     available = true;
                     finishAvailability(onResult);
                 } else if (status == FeatureStatus.DOWNLOADABLE) {
@@ -60,9 +61,15 @@ public class AiRewriteManager {
                         @Override public void onDownloadStarted(long bytesToDownload) { }
                         @Override public void onDownloadProgress(long totalBytesDownloaded) { }
                         @Override public void onDownloadCompleted() {
-                            available = true;
-                            finishAvailability(onResult);
-                            downloadRewriter.close();
+                            try {
+                                downloadRewriter.prepareInferenceEngine().get();
+                                available = true;
+                            } catch (Exception ignored) {
+                                available = false;
+                            } finally {
+                                finishAvailability(onResult);
+                                downloadRewriter.close();
+                            }
                         }
                         @Override public void onDownloadFailed(GenAiException e) {
                             available = false;
