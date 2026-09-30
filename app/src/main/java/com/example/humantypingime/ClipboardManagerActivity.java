@@ -1,3 +1,13 @@
+/*
+ * ClipboardManagerActivity.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: HARDEN — guard against a null ClipboardItem.tags in the search filter
+ *             (defensive; store normally writes ""). Calls into ClipboardHistoryStore are unchanged.
+ * 2026-09-30: UI — "Copy & type" action (copies, then asks the IME to type it); one-tap ✕
+ *             delete button on each row (long-press menu still available).
+ */
+
 package com.example.humantypingime;
 
 import android.content.ClipData;
@@ -60,7 +70,8 @@ public class ClipboardManagerActivity extends AppCompatActivity {
         String q=((EditText)findViewById(R.id.et_search)).getText().toString().trim().toLowerCase();
         items=new ArrayList<>();
         for(ClipboardItem item:store.getItems()) {
-            boolean matches=q.isEmpty() || item.text.toLowerCase().contains(q) || item.tags.contains(q);
+            boolean matches=q.isEmpty() || item.text.toLowerCase().contains(q)
+                    || (item.tags != null && item.tags.contains(q));
             if(matches && ("all".equals(mode) || ("pinned".equals(mode)&&item.pinned) || ("todo".equals(mode)&&item.todo))) items.add(item);
         }
         empty.setVisibility(items.isEmpty()?View.VISIBLE:View.GONE);
@@ -102,21 +113,33 @@ public class ClipboardManagerActivity extends AppCompatActivity {
                 // Left icon already carries the primary state; surface the todo check only when the pin is showing instead.
                 iconTodo.setVisibility(clip.pinned && clip.todo ? View.VISIBLE : View.GONE);
 
+                // One-tap delete shortcut on each row.
+                TextView rowDelete = row.findViewById(R.id.btn_row_delete);
+                if (rowDelete != null) {
+                    rowDelete.setOnClickListener(v -> { store.delete(clip); refresh(); });
+                }
+
                 itemText.setAlpha(clip.todo && clip.done ? 0.45f : 1f);
                 return row;
             }
         });
     }
     private void actions(ClipboardItem item) {
-        String[] options={"Copy","Pin / unpin","Add / remove todo","Mark done / not done","Edit tags","Delete"};
+        String[] options={"Copy & type","Copy","Pin / unpin","Add / remove todo","Mark done / not done","Edit tags","Delete"};
         new AlertDialog.Builder(this).setTitle(item.text.length()>40?item.text.substring(0,37)+"...":item.text).setItems(options,(d,w)->{
-            if(w==0){((ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("clip",item.text));Toast.makeText(this,"Copied",Toast.LENGTH_SHORT).show();}
-            else if(w==1)store.togglePin(item); else if(w==2)store.toggleTodo(item); else if(w==3){if(item.todo)store.toggleDone(item);}
-            else if(w==4)editTags(item); else store.delete(item); refresh();
+            if(w==0){boolean queued=ClipboardActions.requestTyping(this,"Clipboard item",item.text,false,false);Toast.makeText(this,queued?"Open a text field in another app within 30 s to type this item.":"Could not copy item.",Toast.LENGTH_LONG).show();}
+            else if(w==1){copyToClipboard(item.text);Toast.makeText(this,"Copied",Toast.LENGTH_SHORT).show();}
+            else if(w==2)store.togglePin(item); else if(w==3)store.toggleTodo(item); else if(w==4){if(item.todo)store.toggleDone(item);}
+            else if(w==5)editTags(item); else store.delete(item); refresh();
         }).setNegativeButton("Cancel",null).show();
+    }
+    private void copyToClipboard(String text) {
+        ClipboardManager cm=(ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+        if(cm!=null) cm.setPrimaryClip(ClipData.newPlainText("clip", text));
     }
     private void editTags(ClipboardItem item) {
         EditText input=new EditText(this);input.setText(item.tags);input.setHint("tag1, tag2");
         new AlertDialog.Builder(this).setTitle("Tags").setView(input).setPositiveButton("Save",(d,w)->{item.tags=ClipboardHistoryStore.normalizeTags(input.getText().toString());store.saveItem(item);refresh();}).setNegativeButton("Cancel",null).show();
     }
 }
+//（注：内容由AI生成）

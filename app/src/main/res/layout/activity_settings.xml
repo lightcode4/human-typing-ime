@@ -3,21 +3,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="24dp">
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Human Typing Settings"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
-
+            android:layout_marginBottom="16dp" />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -41,47 +38,52 @@
                 android:text="Light theme"
                 android:textStyle="bold" />
         </LinearLayout>
-
+        <TextView style="@style/SectionHeader" android:text="TYPING RHYTHM" android:layout_marginTop="0dp" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Profile (app-specific):"
             android:textStyle="bold"
-            android:layout_marginBottom="4dp"/>
-
+            android:layout_marginBottom="4dp" />
         <Spinner
             android:id="@+id/sp_profile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
-
-        <TextView android:id="@+id/tv_min" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <SeekBar android:id="@+id/sb_min" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-
-        <TextView android:id="@+id/tv_max" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp"/>
-        <SeekBar android:id="@+id/sb_max" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-
-        <TextView android:id="@+id/tv_punct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp"/>
-        <SeekBar android:id="@+id/sb_punct" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-
-        <TextView android:id="@+id/tv_typo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp"/>
-        <SeekBar android:id="@+id/sb_typo" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-
-        <Button
-            android:id="@+id/btn_save"
-            android:layout_width="wrap_content"
+            android:layout_marginBottom="16dp" />
+        <TextView android:id="@+id/tv_min" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <SeekBar android:id="@+id/sb_min" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <TextView android:id="@+id/tv_max" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
+        <SeekBar android:id="@+id/sb_max" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <TextView android:id="@+id/tv_punct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
+        <SeekBar android:id="@+id/sb_punct" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <TextView android:id="@+id/tv_typo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
+        <SeekBar android:id="@+id/sb_typo" android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <!-- Live cadence preview -->
+        <TextView android:id="@+id/tv_preview" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Save"
             android:layout_marginTop="24dp"
-            android:layout_gravity="end"/>
-
+            android:gravity="end"
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/btn_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reset defaults" />
+            <Button
+                android:id="@+id/btn_save"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Save" />
+        </LinearLayout>
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#FFDDDDDD"
+            android:background="@color/divider"
             android:layout_marginTop="24dp"
             android:layout_marginBottom="16dp" />
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -89,15 +91,13 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginBottom="4dp" />
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Signs live typing telemetry with an Ed25519/ECDSA key from Android Keystore. The signature and telemetry are embedded invisibly via zero-width metadata tags."
             android:textSize="12sp"
-            android:textColor="#FF666666"
+            android:textColor="@color/text_secondary"
             android:layout_marginBottom="12dp" />
-
         <Switch
             android:id="@+id/sw_proof"
             android:layout_width="match_parent"
@@ -105,20 +105,17 @@
             android:text="Embed proof-of-human signature"
             android:checked="true"
             android:layout_marginBottom="12dp" />
-
         <Button
             android:id="@+id/btn_export_pubkey"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Export Public Key (Copy to Clipboard)"
             android:layout_marginBottom="16dp" />
-
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Accessibility" android:textStyle="bold" android:textSize="16sp" android:layout_marginTop="16dp"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Accessibility" android:textStyle="bold" android:textSize="16sp" android:layout_marginTop="16dp" />
         <Switch android:id="@+id/sw_focus" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Focus mode — larger, reduced keyboard" />
         <Switch android:id="@+id/sw_tts" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Speak typed characters aloud" />
         <Switch android:id="@+id/sw_slow" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Slow keys" />
         <Switch android:id="@+id/sw_bounce" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Bounce keys" />
-
         <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="16dp" android:background="@color/divider" />
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Privacy" android:textStyle="bold" android:textSize="16sp" />
         <TextView android:id="@+id/tv_behavioral_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="@color/text_secondary" android:text="No local typing-rhythm profile saved." />
@@ -126,14 +123,12 @@
             <Button android:id="@+id/btn_enroll_behavioral" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Create rhythm profile" />
             <Button android:id="@+id/btn_clear_behavioral" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Delete profile" />
         </LinearLayout>
-
         <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="16dp" android:background="@color/divider" />
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Writing" android:textStyle="bold" android:textSize="16sp" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Rewrite a draft in a separate review screen. You choose whether to copy the result." android:textColor="@color/text_secondary" />
         <Button android:id="@+id/btn_safe_rewrite" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Open rewrite screen" />
-
         <Switch android:id="@+id/sw_rewrite" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Rewrite key on keyboard (on-device AI)" />
         <TextView android:id="@+id/tv_ai_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="@color/text_secondary" android:textSize="12sp" android:text="Checking on-device AI availability…" />
-
     </LinearLayout>
 </ScrollView>
+<!-- （注：内容由AI生成） -->

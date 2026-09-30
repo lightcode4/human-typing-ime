@@ -1,3 +1,10 @@
+/*
+ * BehavioralProfile.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: unchanged
+ */
+
 package com.example.humantypingime;
 
 /**
@@ -17,3 +24,4 @@ public class BehavioralProfile {
         return samples >= 40 && mean > 0 && stddev > 0;
     }
 }
+//（注：内容由AI生成）

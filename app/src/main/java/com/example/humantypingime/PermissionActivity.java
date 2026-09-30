@@ -1,3 +1,10 @@
+/*
+ * PermissionActivity.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: unchanged
+ */
+
 package com.example.humantypingime;
 
 import android.Manifest;
@@ -70,3 +77,4 @@ public class PermissionActivity extends AppCompatActivity {
         }
     }
 }
+//（注：内容由AI生成）

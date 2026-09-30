@@ -1,3 +1,22 @@
+/*
+ * HumanTypingIME.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: FIX(i) — deterministically release SpeechRecognizer-backed
+ *             VoiceInputManager, the primary-clip listener, and the pending
+ *             clipboard-purge callback in onDestroy; guard teardown with a
+ *             shutdown flag so resources are released at most once.
+ * 2026-09-30: HARDEN — replace the three silent empty catch blocks (clipboard
+ *             purge, input-view rebuild, best-effort proof embedding) with
+ *             Log.w diagnostics; runtime behavior unchanged.
+ * 2026-09-30: UI — status strip on both keyboards (Ready / Listening… / Typing… / Stopped / Done
+ *             / "Typing X of N" every 25 chars); themed inflater for all popups so dark mode is
+ *             correct; mic key shows permission/recording state; empty vault key dimmed; KEYBOARD_TAP
+ *             haptics on Type/Stop/Delete; "Captured…" debug toast removed, vault toast no longer
+ *             reveals the detected category; new ACTION_TYPE_CLIPBOARD broadcast received so
+ *             Clipboard/Vault/Rewrite screens can hand text to the IME.
+ */
+
 package com.example.humantypingime;
 
 import android.Manifest;
@@ -14,7 +33,9 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -39,6 +60,8 @@ import java.util.Random;
 
 public class HumanTypingIME extends InputMethodService {
 
+    private static final String TAG = "HumanTypingIME";
+
     public static final String PREFS_NAME = "human_typing_prefs";
     public static final String KEY_MIN_DELAY = "min_delay";
     public static final String KEY_MAX_DELAY = "max_delay";
@@ -50,6 +73,8 @@ public class HumanTypingIME extends InputMethodService {
     public static final String KEY_SLOW_KEYS = "slow_keys";
     public static final String KEY_BOUNCE_KEYS = "bounce_keys";
     public static final String KEY_AI_REWRITE = "ai_rewrite_enabled";
+    /** Broadcast: asks the IME to type the current clipboard content (human cadence). */
+    public static final String ACTION_TYPE_CLIPBOARD = "com.example.humantypingime.ACTION_TYPE_CLIPBOARD";
     public static final int DEF_SLOW_KEYS_MS = 300;
 
     public static final int DEF_MIN_DELAY = 30;
@@ -65,6 +90,7 @@ public class HumanTypingIME extends InputMethodService {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Random random = new Random();
     private volatile boolean isTyping = false;
+    private volatile boolean destroyed = false;
 
     private ClipboardHistoryStore historyStore;
     private VaultStore vaultStore;
@@ -74,8 +100,6 @@ public class HumanTypingIME extends InputMethodService {
     private Toast voiceToast;
     private TypingTelemetry telemetry;
     private boolean proofEmbeddingEnabled = true;
-    private final Handler purgeHandler = new Handler(Looper.getMainLooper());
-    private Runnable pendingPurge;
     private ClipboardManager clipboardManager;
     private ClipboardManager.OnPrimaryClipChangedListener clipListener;
     private boolean clipListenerRegistered;
@@ -88,11 +112,21 @@ public class HumanTypingIME extends InputMethodService {
     private char lastCommittedChar;
     private long lastCommittedAt;
 
+    // UI state of the input view (status strip, mic button, vault dimming)
+    private TextView statusView;
+    private TextView focusStatusView;
+    private View micButton;
+    private TextView micLabel;
+    private View vaultButton;
+
     private final BroadcastReceiver stopReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (TypingForegroundService.ACTION_STOP_TYPING.equals(intent.getAction())) {
+            String action = intent == null ? null : intent.getAction();
+            if (TypingForegroundService.ACTION_STOP_TYPING.equals(action)) {
                 stopTyping();
+            } else if (ACTION_TYPE_CLIPBOARD.equals(action)) {
+                handler.post(HumanTypingIME.this::consumeTypingHandoff);
             }
         }
     };
@@ -135,18 +169,20 @@ public class HumanTypingIME extends InputMethodService {
             if (resumeStore != null) resumeStore.clearIfTextDiffers(text);
             SensitivePatternDetector.Kind kind = SensitivePatternDetector.classify(text);
 
-            if (kind != SensitivePatternDetector.Kind.NONE) {
-                vaultStore.add(text, kind);
+            if (kind != SensitivePatternDetector.Kind.NONE || ClipboardActions.isSensitive(clip)) {
+                if (kind != SensitivePatternDetector.Kind.NONE) vaultStore.add(text, kind);
                 scheduleClipboardPurge();
-                Toast.makeText(this, "Saved to vault (" + kind + ")", Toast.LENGTH_SHORT).show();
+                // Neutral feedback: never reveal the category or the content on screen.
+                if (!ClipboardActions.isSensitive(clip)) {
+                    Toast.makeText(this, "Saved to vault", Toast.LENGTH_SHORT).show();
+                }
             } else {
                 historyStore.add(text);
-                // DEBUG: Let us know it captured something
-                Toast.makeText(this, "Captured: " + text, Toast.LENGTH_SHORT).show();
             }
         };
 
         IntentFilter filter = new IntentFilter(TypingForegroundService.ACTION_STOP_TYPING);
+        filter.addAction(ACTION_TYPE_CLIPBOARD);
         ContextCompat.registerReceiver(this, stopReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED);
 
         IntentFilter themeFilter = new IntentFilter(ThemeManager.ACTION_THEME_CHANGED);
@@ -155,36 +191,41 @@ public class HumanTypingIME extends InputMethodService {
     }
 
     private void scheduleClipboardPurge() {
-        if (pendingPurge != null) purgeHandler.removeCallbacks(pendingPurge);
-        pendingPurge = () -> {
-            try {
-                if (clipboardManager != null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        clipboardManager.clearPrimaryClip();
-                    } else {
-                        clipboardManager.setPrimaryClip(
-                                ClipData.newPlainText("", ""));
-                    }
-                }
-            } catch (Exception ignored) { }
-            pendingPurge = null;
-        };
-        // 30 seconds is enough for a paste into a password field; tune as needed
-        purgeHandler.postDelayed(pendingPurge, 30_000L);
+        if (clipboardManager != null) {
+            ClipboardActions.scheduleClear(this, clipboardManager.getPrimaryClip());
+        }
     }
 
     @Override
     public void onDestroy() {
+        if (destroyed) return;
+        destroyed = true;
         pauseTypingForResume();
+        // Unregister the clip listener if onFinishInputView never ran (e.g. service
+        // destroyed while the input view was still shown)
+        if (clipboardManager != null && clipListener != null && clipListenerRegistered) {
+            try {
+                clipboardManager.removePrimaryClipChangedListener(clipListener);
+            } catch (Exception e) {
+                Log.w(TAG, "removePrimaryClipChangedListener failed", e);
+            }
+            clipListenerRegistered = false;
+        }
         try {
             unregisterReceiver(stopReceiver);
-        } catch (IllegalArgumentException ignored) { }
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "stopReceiver not registered", e);
+        }
         if (themeReceiverRegistered) {
             try {
                 unregisterReceiver(themeReceiver);
-            } catch (IllegalArgumentException ignored) { }
+            } catch (IllegalArgumentException e) {
+                Log.w(TAG, "themeReceiver not registered", e);
+            }
             themeReceiverRegistered = false;
         }
+        // Deterministically release the SpeechRecognizer held by the voice manager
+        if (voiceManager != null) { voiceManager.cancel(); voiceManager = null; }
         if (typingTts != null) { typingTts.shutdown(); typingTts = null; }
         if (aiRewrite != null) { aiRewrite.shutdown(); aiRewrite = null; }
         super.onDestroy();
@@ -208,12 +249,44 @@ public class HumanTypingIME extends InputMethodService {
         return createConfigurationContext(configuration);
     }
 
+    /** Inflates popups from the active theme context so colors resolve in dark mode too. */
+    private android.view.LayoutInflater themedInflater() {
+        return getLayoutInflater().cloneInContext(buildThemedContext());
+    }
+
+    /** Updates the status strip on both the normal and the focus keyboard. */
+    private void setStatus(String text) {
+        if (statusView != null) statusView.setText(text);
+        if (focusStatusView != null) focusStatusView.setText(text);
+    }
+
+    private boolean hasMicPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /** Reflects recording state and permission state on the mic key. */
+    private void refreshMicUi(boolean recording) {
+        if (micButton == null) return;
+        if (recording) {
+            micButton.setAlpha(1f);
+            if (micLabel != null) micLabel.setText("Listening…");
+        } else {
+            boolean permitted = hasMicPermission();
+            micButton.setAlpha(permitted ? 1f : 0.35f);
+            if (micLabel != null) {
+                micLabel.setText(permitted ? "Hold to speak" : "Mic needs permission");
+            }
+        }
+    }
+
     private void rebuildInputView() {
         try {
             setInputView(null);
             setInputView(onCreateInputView());
-        } catch (Exception ignored) {
+        } catch (Exception e) {
             // The next normal IME view creation will use the saved mode.
+            Log.w(TAG, "rebuildInputView failed; will recreate on next view", e);
         }
     }
 
@@ -242,7 +315,21 @@ public class HumanTypingIME extends InputMethodService {
         View btnBackspace = view.findViewById(R.id.btn_backspace);
         View btnRewrite = view.findViewById(R.id.btn_rewrite);
 
-        btnType.setOnClickListener(v -> startTypingFromClipboard());
+        statusView = view.findViewById(R.id.tv_ime_status);
+        micButton = btnMic;
+        micLabel = view.findViewById(R.id.tv_mic_label);
+        vaultButton = btnVault;
+        setStatus("Ready");
+        refreshMicUi(false);
+        // Dim the vault key when there is nothing to open yet (still tappable to set up).
+        if (vaultButton != null && vaultStore != null && vaultStore.getAll().isEmpty()) {
+            vaultButton.setAlpha(0.5f);
+        }
+
+        btnType.setOnClickListener(v -> {
+            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+            startTypingFromClipboard();
+        });
         btnHistory.setOnClickListener(this::showHistoryPopup);
         if (btnTemplates != null) {
             btnTemplates.setOnClickListener(this::showTemplatesPickerPopup);
@@ -293,7 +380,10 @@ public class HumanTypingIME extends InputMethodService {
             });
         }
         if (btnBackspace != null) {
-            btnBackspace.setOnClickListener(v -> deleteOne());
+            btnBackspace.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                deleteOne();
+            });
             btnBackspace.setOnLongClickListener(v -> {
                 showDeleteMenu(v);
                 return true;
@@ -303,7 +393,10 @@ public class HumanTypingIME extends InputMethodService {
             btnRewrite.setOnClickListener(this::showRewritePopup);
             aiRewrite.checkAvailability(available -> btnRewrite.setAlpha(available ? 1f : 0.35f));
         }
-        btnStop.setOnClickListener(v -> stopTyping());
+        btnStop.setOnClickListener(v -> {
+            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+            stopTyping();
+        });
         btnSettings.setOnClickListener(v -> {
             Intent intent = new Intent(this, SettingsActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -314,10 +407,21 @@ public class HumanTypingIME extends InputMethodService {
     }
 
     private void wireFocusLayout(View view) {
-        view.findViewById(R.id.focus_btn_type).setOnClickListener(v -> startTypingFromClipboard());
-        view.findViewById(R.id.focus_btn_stop).setOnClickListener(v -> stopTyping());
+        focusStatusView = view.findViewById(R.id.focus_tv_status);
+        setStatus("Ready");
+        view.findViewById(R.id.focus_btn_type).setOnClickListener(v -> {
+            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+            startTypingFromClipboard();
+        });
+        view.findViewById(R.id.focus_btn_stop).setOnClickListener(v -> {
+            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+            stopTyping();
+        });
         View delete = view.findViewById(R.id.focus_btn_backspace);
-        delete.setOnClickListener(v -> deleteOne());
+        delete.setOnClickListener(v -> {
+            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+            deleteOne();
+        });
         delete.setOnLongClickListener(v -> { showDeleteMenu(v); return true; });
         view.findViewById(R.id.focus_btn_more).setOnClickListener(v -> {
             Intent intent = new Intent(this, SettingsActivity.class);
@@ -338,10 +442,14 @@ public class HumanTypingIME extends InputMethodService {
         if (voiceManager.isRunning()) return;
         stopTyping();
         voiceManager.start();
+        refreshMicUi(true);
+        setStatus("Listening…");
     }
 
     private void stopVoiceRecordingAndTranscribe() {
         if (voiceManager != null && voiceManager.isRunning()) voiceManager.stop();
+        refreshMicUi(false);
+        setStatus("");
     }
 
     private void cancelVoiceRecording() {
@@ -350,6 +458,8 @@ public class HumanTypingIME extends InputMethodService {
             if (voiceToast != null) voiceToast.cancel();
             Toast.makeText(this, "Cancelled", Toast.LENGTH_SHORT).show();
         }
+        refreshMicUi(false);
+        setStatus("");
     }
 
     /** Deletes the character immediately to the left of the cursor. */
@@ -393,7 +503,7 @@ public class HumanTypingIME extends InputMethodService {
 
     /** Shows an IME-window-safe deletion menu after a long press on Backspace. */
     private void showDeleteMenu(View anchor) {
-        View popupView = getLayoutInflater().inflate(R.layout.popup_delete_menu, null);
+        View popupView = themedInflater().inflate(R.layout.popup_delete_menu, null);
         TextView one = popupView.findViewById(R.id.menu_backspace);
         TextView word = popupView.findViewById(R.id.menu_delete_word);
         TextView all = popupView.findViewById(R.id.menu_clear_field);
@@ -421,8 +531,12 @@ public class HumanTypingIME extends InputMethodService {
             return;
         }
         if (!aiRewrite.isAvailable()) {
-            Toast.makeText(this, "On-device rewriting is not available on this device",
+            Toast.makeText(this, aiRewrite.getStatusMessage(),
                     Toast.LENGTH_LONG).show();
+            aiRewrite.checkAvailability(available -> {
+                Toast.makeText(this, available ? "Rewrite ready — tap Rewrite again."
+                        : aiRewrite.getStatusMessage(), Toast.LENGTH_LONG).show();
+            });
             return;
         }
         String source = readCurrentFieldText();
@@ -431,13 +545,15 @@ public class HumanTypingIME extends InputMethodService {
             return;
         }
         if (source.length() > REWRITE_MAX_CHARS) {
-            Toast.makeText(this, "Rewrite works on the first " + REWRITE_MAX_CHARS
-                    + " characters of the field", Toast.LENGTH_LONG).show();
-            source = source.substring(0, REWRITE_MAX_CHARS);
+            Toast.makeText(this, "Use a draft up to " + REWRITE_MAX_CHARS
+                    + " characters in the separate Rewrite screen.", Toast.LENGTH_LONG).show();
+            return;
         }
         final String textToRewrite = source;
+        final InputConnection rewriteConnection = getCurrentInputConnection();
+        final String rewritePackage = currentPackage;
 
-        View popupView = getLayoutInflater().inflate(R.layout.popup_rewrite, null);
+        View popupView = themedInflater().inflate(R.layout.popup_rewrite, null);
         TextView status = popupView.findViewById(R.id.tv_rewrite_status);
 
         PopupWindow popup = new PopupWindow(popupView,
@@ -471,12 +587,22 @@ public class HumanTypingIME extends InputMethodService {
             AiRewriteManager.Tone tone = tones[optionIndex];
             aiRewrite.rewrite(textToRewrite, tone, new AiRewriteManager.Callback() {
                 @Override public void onResult(String rewritten) {
+                    if (!popup.isShowing()) return;
+                    if (!rewritePackage.equals(currentPackage)
+                            || rewriteConnection != getCurrentInputConnection()
+                            || !textToRewrite.equals(readCurrentFieldText())) {
+                        running[0] = false;
+                        status.setText("The field changed. Close this menu and try again.");
+                        for (int id : optionIds) popupView.findViewById(id).setEnabled(true);
+                        return;
+                    }
                     popup.dismiss();
                     deleteAll();
                     startTypingText(rewritten);
                 }
 
                 @Override public void onError(String message) {
+                    if (!popup.isShowing()) return;
                     running[0] = false;
                     status.setText("Failed: " + message);
                     for (int id : optionIds) popupView.findViewById(id).setEnabled(true);
@@ -501,7 +627,7 @@ public class HumanTypingIME extends InputMethodService {
         StringBuilder sb = new StringBuilder();
         if (before != null) sb.append(before);
         if (after != null) sb.append(after);
-        return sb.toString().trim();
+        return sb.toString();
     }
 
     private final VoiceInputManager.Callback voiceCallback = new VoiceInputManager.Callback() {
@@ -516,6 +642,8 @@ public class HumanTypingIME extends InputMethodService {
         @Override
         public void onFinal(String processedText) {
             if (voiceToast != null) voiceToast.cancel();
+            refreshMicUi(false);
+            setStatus("");
             if (processedText == null || processedText.isEmpty()) {
                 Toast.makeText(HumanTypingIME.this,
                         "Nothing recognized", Toast.LENGTH_SHORT).show();
@@ -527,25 +655,29 @@ public class HumanTypingIME extends InputMethodService {
         @Override
         public void onError(String message) {
             if (voiceToast != null) voiceToast.cancel();
+            refreshMicUi(false);
+            setStatus("");
             Toast.makeText(HumanTypingIME.this, message, Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onReady() {
             Toast.makeText(HumanTypingIME.this, "Listening…", Toast.LENGTH_SHORT).show();
+            setStatus("Listening…");
         }
 
         @Override
-        public void onEnd() { }
+        public void onEnd() {
+            refreshMicUi(false);
+            setStatus("");
+        }
     };
 
     @Override
     public void onStartInputView(EditorInfo info, boolean restarting) {
         super.onStartInputView(info, restarting);
         if (triggerWatcher != null) triggerWatcher.clear();
-        if (info != null && info.packageName != null) {
-            currentPackage = info.packageName.toString();
-        }
+        currentPackage = info != null && info.packageName != null ? info.packageName : "";
         if (clipboardManager != null && clipListener != null && !clipListenerRegistered) {
             clipboardManager.addPrimaryClipChangedListener(clipListener);
             clipListenerRegistered = true;
@@ -559,8 +691,8 @@ public class HumanTypingIME extends InputMethodService {
                     String text = cs.toString();
                     if (resumeStore != null) resumeStore.clearIfTextDiffers(text);
                     SensitivePatternDetector.Kind kind = SensitivePatternDetector.classify(text);
-                    if (kind != SensitivePatternDetector.Kind.NONE) {
-                        vaultStore.add(text, kind);
+                    if (kind != SensitivePatternDetector.Kind.NONE || ClipboardActions.isSensitive(clip)) {
+                        if (kind != SensitivePatternDetector.Kind.NONE) vaultStore.add(text, kind);
                         scheduleClipboardPurge();
                     } else {
                         historyStore.add(text);
@@ -568,6 +700,14 @@ public class HumanTypingIME extends InputMethodService {
                 }
             }
         }
+        handler.post(this::consumeTypingHandoff);
+    }
+
+    private void consumeTypingHandoff() {
+        if (destroyed || !isInputViewShown() || getCurrentInputConnection() == null
+                || currentPackage.isEmpty() || getPackageName().equals(currentPackage)) return;
+        String text = ClipboardActions.consumeForTyping(this);
+        if (text != null && !text.isEmpty()) startTypingText(text);
     }
 
     @Override
@@ -589,7 +729,7 @@ public class HumanTypingIME extends InputMethodService {
         }
 
         // Inflate the popup layout
-        View popupView = getLayoutInflater().inflate(R.layout.popup_history, null);
+        View popupView = themedInflater().inflate(R.layout.popup_history, null);
         ListView listView = popupView.findViewById(R.id.lv_history);
         View btnClear = popupView.findViewById(R.id.btn_clear_history);
 
@@ -647,7 +787,7 @@ public class HumanTypingIME extends InputMethodService {
             return;
         }
 
-        View popupView = getLayoutInflater().inflate(R.layout.popup_templates, null);
+        View popupView = themedInflater().inflate(R.layout.popup_templates, null);
         ListView listView = popupView.findViewById(R.id.lv_templates);
         View btnClose = popupView.findViewById(R.id.btn_close_templates);
 
@@ -697,7 +837,7 @@ public class HumanTypingIME extends InputMethodService {
             return;
         }
 
-        View popupView = getLayoutInflater().inflate(R.layout.popup_template_fill, null);
+        View popupView = themedInflater().inflate(R.layout.popup_template_fill, null);
         TextView tvTitle = popupView.findViewById(R.id.tv_template_title);
         TextView tvPreview = popupView.findViewById(R.id.tv_template_preview);
         LinearLayout fieldsLayout = popupView.findViewById(R.id.layout_template_fields);
@@ -711,7 +851,7 @@ public class HumanTypingIME extends InputMethodService {
         for (String var : vars) {
             TextView label = new TextView(this);
             label.setText("{" + var + "}:");
-            label.setTextColor(Color.DKGRAY);
+            label.setTextColor(ContextCompat.getColor(this, R.color.text_secondary));
             label.setTextSize(12f);
             label.setPadding(0, 8, 0, 2);
             fieldsLayout.addView(label);
@@ -725,8 +865,7 @@ public class HumanTypingIME extends InputMethodService {
 
         PopupWindow popup = new PopupWindow(popupView,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                true);
+                LinearLayout.LayoutParams.WRAP_CONTENT, true);
         popup.setInputMethodMode(PopupWindow.INPUT_METHOD_NEEDED);
         popup.setOutsideTouchable(true);
         popup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -802,6 +941,7 @@ public class HumanTypingIME extends InputMethodService {
         isTyping = true;
         activeText = text;
         activeIndex = startIndex;
+        setStatus("Typing…");
 
         // Start foreground service for long texts
         if (text.length() > LONG_TEXT_THRESHOLD) {
@@ -824,6 +964,7 @@ public class HumanTypingIME extends InputMethodService {
         isTyping = false;
         handler.removeCallbacksAndMessages(null);
         stopService(new Intent(this, TypingForegroundService.class));
+        setStatus("Stopped");
         if (clearResume && resumeStore != null) {
             resumeStore.clear();
             activeText = null;
@@ -981,6 +1122,11 @@ public class HumanTypingIME extends InputMethodService {
             delay += randomDelay(100, 200);
         }
 
+        // Keep the status strip alive during long texts (every 25 chars).
+        if ((index[0] % 25) == 0) {
+            setStatus("Typing " + index[0] + " / " + text.length());
+        }
+
         handler.postDelayed(r, delay);
     }
 
@@ -1003,6 +1149,7 @@ public class HumanTypingIME extends InputMethodService {
         isTyping = false;
         activeIndex = completedIndex;
         activeText = null;
+        setStatus("Done");
         if (resumeStore != null) resumeStore.clear();
         maybeAttachProof(text);
     }
@@ -1030,7 +1177,8 @@ public class HumanTypingIME extends InputMethodService {
             String tagOnly = tagged.substring(text.length());
             ic.commitText(tagOnly, 1);
         } catch (Exception e) {
-            // Silent fail — proof is best-effort, not a blocker
+            // Best-effort proofing: never block or surface an error to the user.
+            Log.w(TAG, "Proof attachment failed (non-blocking)", e);
         }
     }
 
@@ -1050,3 +1198,4 @@ public class HumanTypingIME extends InputMethodService {
         }
     }
 }
+//（注：内容由AI生成）

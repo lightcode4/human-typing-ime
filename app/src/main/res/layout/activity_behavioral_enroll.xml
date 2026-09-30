@@ -3,13 +3,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="24dp">
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -17,14 +15,12 @@
             android:textColor="@color/text_primary"
             android:textSize="24sp"
             android:textStyle="bold" />
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="Type naturally in the box below. The app saves only summary timing statistics on this device — never the passage, individual key timings, or any data to a server."
             android:textColor="@color/text_secondary" />
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -32,7 +28,6 @@
             android:text="Type this passage:"
             android:textColor="@color/text_primary"
             android:textStyle="bold" />
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -42,7 +37,6 @@
             android:text="The morning sun lights the room as I write a short message to a friend. I type at a calm, natural pace and let each word arrive without rushing."
             android:textColor="@color/text_primary"
             android:textIsSelectable="true" />
-
         <EditText
             android:id="@+id/et_behavioral_passage"
             android:layout_width="match_parent"
@@ -52,34 +46,37 @@
             android:hint="Type the passage here…"
             android:inputType="textMultiLine|textCapSentences"
             android:padding="12dp" />
-
         <TextView
             android:id="@+id/tv_behavioral_progress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:textColor="@color/text_secondary" />
-
         <ProgressBar
             android:id="@+id/pb_behavioral_enroll"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp" />
-
+        <TextView
+            android:id="@+id/tv_behavioral_hint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Aim for 40+ intervals (about 40 typed characters). Enough samples give a reliable estimate of your natural rhythm — the passage itself is never stored."
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:gravity="end"
             android:orientation="horizontal">
-
             <Button
                 android:id="@+id/btn_behavioral_cancel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Cancel" />
-
             <Button
                 android:id="@+id/btn_behavioral_save"
                 android:layout_width="wrap_content"
@@ -89,3 +86,4 @@
         </LinearLayout>
     </LinearLayout>
 </ScrollView>
+<!-- （注：内容由AI生成） -->

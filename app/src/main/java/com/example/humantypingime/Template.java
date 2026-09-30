@@ -1,3 +1,12 @@
+/*
+ * Template.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: HARDEN — guard render() against null map values (String.replace
+ *             would otherwise NPE); guard fromJson() against a null JSONObject
+ *             receiver. Behavior unchanged for valid inputs.
+ */
+
 package com.example.humantypingime;
 
 import org.json.JSONException;
@@ -55,7 +64,9 @@ public class Template {
         String result = body;
         if (values != null) {
             for (Map.Entry<String, String> entry : values.entrySet()) {
-                result = result.replace("{" + entry.getKey() + "}", entry.getValue());
+                String v = entry.getValue();
+                if (v == null) continue;
+                result = result.replace("{" + entry.getKey() + "}", v);
             }
         }
         return result;
@@ -71,6 +82,7 @@ public class Template {
     }
 
     public static Template fromJson(JSONObject obj) {
+        if (obj == null) return new Template("", "", "", "");
         return new Template(
                 obj.optString("id", String.valueOf(System.currentTimeMillis())),
                 obj.optString("name", "Untitled"),
@@ -79,3 +91,4 @@ public class Template {
         );
     }
 }
+//（注：内容由AI生成）

@@ -1,3 +1,14 @@
+/*
+ * TypingTelemetry.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: HARDEN — getIntervals() now returns a defensive copy of the
+ *             internal mutable list instead of exposing it; synchronize all
+ *             mutators/accessors so the list and lastKeyTime are safely visible
+ *             across the typing loop and the proof-attaching path. Callers
+ *             keep working; behavior preserved.
+ */
+
 package com.example.humantypingime;
 
 import java.util.ArrayList;
@@ -9,7 +20,7 @@ public class TypingTelemetry {
     private long lastKeyTime = 0L;
 
     /** Call this every time a character is committed through the IME. */
-    public void recordKeystroke() {
+    public synchronized void recordKeystroke() {
         long now = System.nanoTime();
         if (lastKeyTime > 0) {
             long deltaMs = (now - lastKeyTime) / 1_000_000L;
@@ -21,16 +32,17 @@ public class TypingTelemetry {
         lastKeyTime = now;
     }
 
-    public void reset() {
+    public synchronized void reset() {
         interKeyIntervals.clear();
         lastKeyTime = 0L;
     }
 
-    public List<Long> getIntervals() {
-        return interKeyIntervals;
+    public synchronized List<Long> getIntervals() {
+        return new ArrayList<>(interKeyIntervals);
     }
 
-    public boolean hasEnoughSamples() {
+    public synchronized boolean hasEnoughSamples() {
         return interKeyIntervals.size() >= 20;
     }
 }
+//（注：内容由AI生成）

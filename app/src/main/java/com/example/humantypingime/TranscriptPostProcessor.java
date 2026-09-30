@@ -1,3 +1,12 @@
+/*
+ * TranscriptPostProcessor.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: HARDEN — bound the repeated-word collapse fixed-point loop
+ *             (j) with a maximum-iteration cap so a pathological transcript can
+ *             never spin; normal inputs still converge in 1–2 passes.
+ */
+
 package com.example.humantypingime;
 
 import java.util.Arrays;
@@ -30,11 +39,16 @@ public class TranscriptPostProcessor {
             Pattern.CASE_INSENSITIVE
     );
 
+    // Safety cap for the fixed-point collapse loop; well-formed transcripts
+    // converge far below this.
+    private static final int MAX_COLLAPSE_ITERATIONS = 16;
+
     public static String process(String raw, List<Long> pauseMarks) {
         if (raw == null || raw.trim().isEmpty()) return "";
 
         String s = raw.trim();
         s = removeFillers(s);
+        if (s.trim().isEmpty()) return "";
         s = collapseRepeats(s);
         s = insertPunctuationFromPauses(s, pauseMarks);
         s = capitalizeSentences(s);
@@ -61,10 +75,12 @@ public class TranscriptPostProcessor {
     private static String collapseRepeats(String s) {
         // Run until fixed point so "the the the" collapses to "the"
         String prev;
+        int iterations = 0;
         do {
             prev = s;
             Matcher m = REPEATED_WORDS.matcher(s);
             s = m.replaceAll("$1");
+            if (++iterations >= MAX_COLLAPSE_ITERATIONS) break;
         } while (!s.equals(prev));
         return s;
     }
@@ -91,7 +107,7 @@ public class TranscriptPostProcessor {
         }
 
         // Map pause marks into word positions proportionally
-        // e.g., 3 pauses across 12 words -> pause roughly after word 3, 6, 9
+        // e.g. 3 pauses across 12 words -> pause roughly after word 3, 6, 9
         int step = Math.max(2, words.length / (pauseMarks.size() + 1));
         StringBuilder out = new StringBuilder();
 
@@ -140,3 +156,4 @@ public class TranscriptPostProcessor {
         return last == '.' || last == '?' || last == '!' || last == ',';
     }
 }
+//（注：内容由AI生成）

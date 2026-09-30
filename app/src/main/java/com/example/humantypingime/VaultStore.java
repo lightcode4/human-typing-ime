@@ -1,8 +1,20 @@
+/*
+ * VaultStore.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: HARDEN — replace silent empty catch blocks (encrypt/add, items
+ *             JSON parse, items JSON build) with Log.w diagnostics; also log
+ *             decrypt failures in reveal() while still returning null. The
+ *             proguard-kept nested VaultItem class and its field names are
+ *             unchanged. Behavior preserved.
+ */
+
 package com.example.humantypingime;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -12,6 +24,7 @@ import java.util.List;
 
 public class VaultStore {
 
+    private static final String TAG = "VaultStore";
     private static final String PREFS = "vault_prefs";
     private static final String KEY_ITEMS = "items";
     private static final int MAX_ITEMS = 50;
@@ -60,7 +73,9 @@ public class VaultStore {
             items.add(0, it);
             while (items.size() > MAX_ITEMS) items.remove(items.size() - 1);
             save(items);
-        } catch (Exception ignored) { }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to add vault item", e);
+        }
     }
 
     public synchronized List<VaultItem> getAll() {
@@ -78,7 +93,9 @@ public class VaultStore {
                 it.createdAt = o.getLong("createdAt");
                 out.add(it);
             }
-        } catch (Exception ignored) { }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to parse vault items JSON", e);
+        }
         return out;
     }
 
@@ -86,6 +103,7 @@ public class VaultStore {
         try {
             return crypto.decrypt(it.blob);
         } catch (Exception e) {
+            Log.w(TAG, "Failed to decrypt vault item", e);
             return null;
         }
     }
@@ -117,7 +135,9 @@ public class VaultStore {
                 o.put("createdAt", it.createdAt);
                 arr.put(o);
             }
-        } catch (Exception ignored) { }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to build vault items JSON", e);
+        }
         prefs.edit().putString(KEY_ITEMS, arr.toString()).apply();
     }
 
@@ -146,3 +166,4 @@ public class VaultStore {
         }
     }
 }
+//（注：内容由AI生成）

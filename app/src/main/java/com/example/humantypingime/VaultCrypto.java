@@ -1,9 +1,20 @@
+/*
+ * VaultCrypto.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: HARDEN — fail fast on null plaintext in encrypt(); in
+ *             getOrCreateKey(), guard against a null/non-SecretKeyEntry
+ *             (keystore race or corrupted alias) instead of letting the cast
+ *             throw an opaque ClassCastException.
+ */
+
 package com.example.humantypingime;
 
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -33,7 +44,11 @@ public class VaultCrypto {
         ks.load(null);
 
         if (ks.containsAlias(keyAlias)) {
-            return ((KeyStore.SecretKeyEntry) ks.getEntry(keyAlias, null)).getSecretKey();
+            KeyStore.Entry entry = ks.getEntry(keyAlias, null);
+            if (!(entry instanceof KeyStore.SecretKeyEntry)) {
+                throw new KeyStoreException("Unexpected keystore entry type for " + keyAlias);
+            }
+            return ((KeyStore.SecretKeyEntry) entry).getSecretKey();
         }
 
         KeyGenerator kg = KeyGenerator.getInstance(
@@ -55,6 +70,7 @@ public class VaultCrypto {
 
     /** Encrypt plaintext. Returns iv||ciphertext as a single byte array. */
     public byte[] encrypt(String plaintext) throws Exception {
+        if (plaintext == null) throw new NullPointerException("plaintext == null");
         SecretKey key = getOrCreateKey();
         Cipher c = Cipher.getInstance(TRANSFORM);
         c.init(Cipher.ENCRYPT_MODE, key);
@@ -84,3 +100,4 @@ public class VaultCrypto {
         return new String(c.doFinal(ct), "UTF-8");
     }
 }
+//（注：内容由AI生成）

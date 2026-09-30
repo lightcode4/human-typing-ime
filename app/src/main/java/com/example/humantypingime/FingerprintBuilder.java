@@ -1,3 +1,10 @@
+/*
+ * FingerprintBuilder.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: unchanged
+ */
+
 package com.example.humantypingime;
 
 import java.util.List;
@@ -49,3 +56,4 @@ public class FingerprintBuilder {
         return fp;
     }
 }
+//（注：内容由AI生成）

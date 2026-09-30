@@ -1,3 +1,10 @@
+/*
+ * BehavioralProfileStore.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: unchanged
+ */
+
 package com.example.humantypingime;
 
 import android.content.Context;
@@ -48,3 +55,4 @@ public class BehavioralProfileStore {
         prefs.edit().clear().apply();
     }
 }
+//（注：内容由AI生成）

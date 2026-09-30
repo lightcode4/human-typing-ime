@@ -7,7 +7,6 @@
     android:background="@drawable/bg_card"
     android:orientation="horizontal"
     android:padding="@dimen/space_m">
-
     <!-- Left: state icon (pin / check / history) -->
     <ImageView
         android:id="@+id/icon_kind"
@@ -16,8 +15,7 @@
         android:layout_marginTop="2dp"
         android:contentDescription="@null"
         android:src="@drawable/ic_history"
-        app:tint="@color/text_secondary"/>
-
+        app:tint="@color/text_secondary" />
     <!-- Middle: text + meta -->
     <LinearLayout
         android:layout_width="0dp"
@@ -25,7 +23,6 @@
         android:layout_marginStart="@dimen/space_m"
         android:layout_weight="1"
         android:orientation="vertical">
-
         <TextView
             android:id="@+id/tv_text"
             android:layout_width="match_parent"
@@ -34,17 +31,15 @@
             android:lineSpacingExtra="3dp"
             android:maxLines="4"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"/>
-
+            android:textSize="14sp" />
         <TextView
             android:id="@+id/tv_meta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:textColor="@color/text_secondary"
-            android:textSize="11sp"/>
+            android:textSize="11sp" />
     </LinearLayout>
-
     <!-- Right: todo check, only shown when the left icon is busy showing the pin -->
     <ImageView
         android:id="@+id/icon_todo"
@@ -54,5 +49,23 @@
         android:contentDescription="@null"
         android:src="@drawable/ic_check"
         app:tint="@color/success"
-        android:visibility="gone"/>
+        android:visibility="gone" />
+    <!-- Delete shortcut: one-tap removal, long-press keeps the full menu -->
+    <TextView
+        android:id="@+id/btn_row_delete"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/space_s"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:contentDescription="Delete item"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="✕"
+        android:textColor="@color/text_secondary"
+        android:textSize="16sp" />
 </LinearLayout>
+<!-- （注：内容由AI生成） -->

@@ -1,8 +1,18 @@
+/*
+ * SignatureCrypto.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: HARDEN — add explicit null guard on publicKey in verify();
+ *             replace silent catch-all in verify() (which returned false without
+ *             diagnostics) with Log.w while preserving the return-false behavior.
+ */
+
 package com.example.humantypingime;
 
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
+import android.util.Log;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -13,6 +23,7 @@ import java.security.Signature;
 
 public class SignatureCrypto {
 
+    private static final String TAG = "SignatureCrypto";
     private static final String KEYSTORE = "AndroidKeyStore";
     private static final String KEY_ALIAS = "proof_of_human_signing_v1";
 
@@ -61,12 +72,14 @@ public class SignatureCrypto {
     }
 
     public static boolean verify(byte[] data, byte[] signature, PublicKey publicKey) {
+        if (publicKey == null) return false;
         try {
             Signature sig = Signature.getInstance(algorithm());
             sig.initVerify(publicKey);
             sig.update(data);
             return sig.verify(signature);
         } catch (Exception e) {
+            Log.w(TAG, "Signature verification failed", e);
             return false;
         }
     }
@@ -78,3 +91,4 @@ public class SignatureCrypto {
         return android.util.Base64.encodeToString(encoded, android.util.Base64.NO_WRAP);
     }
 }
+//（注：内容由AI生成）

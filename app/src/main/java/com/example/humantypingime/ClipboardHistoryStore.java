@@ -1,8 +1,17 @@
+/*
+ * ClipboardHistoryStore.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: HARDEN — replace silent empty catch blocks (decrypt/JSON parse/encrypt
+ *             failures) with Log.w diagnostics; behavior unchanged.
+ */
+
 package com.example.humantypingime;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
+import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.ArrayList;
@@ -12,6 +21,7 @@ import java.util.UUID;
 
 /** Local clipboard history with pins, tags, and todo metadata. Encrypted at rest. */
 public class ClipboardHistoryStore {
+    private static final String TAG = "ClipboardHistoryStore";
     private static final String PREFS = "clipboard_history_prefs";
     private static final String KEY_ITEMS_ENC = "items_enc_v3";
     private static final String KEY_ITEMS = "items_v2";
@@ -64,7 +74,8 @@ public class ClipboardHistoryStore {
         if (json != null) {
             try {
                 json = crypto.decrypt(Base64.decode(json, Base64.NO_WRAP));
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to decrypt clipboard history; falling back", e);
                 json = null;
             }
         } else {
@@ -76,19 +87,20 @@ public class ClipboardHistoryStore {
             x.id=o.optString("id", UUID.randomUUID().toString()); x.text=o.optString("text", "");
             x.timestamp=o.optLong("timestamp"); x.pinned=o.optBoolean("pinned"); x.tags=o.optString("tags", "");
             x.todo=o.optBoolean("todo"); x.done=o.optBoolean("done"); if (!x.text.isEmpty()) out.add(x);
-        }} catch (Exception ignored) {} return out;
+        }} catch (Exception e) { Log.w(TAG, "Failed to parse clipboard history JSON", e); } return out;
     }
     private void save(List<ClipboardItem> items) {
-        JSONArray a=new JSONArray(); try { for (ClipboardItem x:items) { JSONObject o=new JSONObject(); o.put("id",x.id);o.put("text",x.text);o.put("timestamp",x.timestamp);o.put("pinned",x.pinned);o.put("tags",x.tags);o.put("todo",x.todo);o.put("done",x.done);a.put(o); }} catch(Exception ignored) {}
+        JSONArray a=new JSONArray(); try { for (ClipboardItem x:items) { JSONObject o=new JSONObject(); o.put("id",x.id);o.put("text",x.text);o.put("timestamp",x.timestamp);o.put("pinned",x.pinned);o.put("tags",x.tags);o.put("todo",x.todo);o.put("done",x.done);a.put(o); }} catch(Exception e) { Log.w(TAG, "Failed to build clipboard history JSON", e); }
         try {
             String enc = Base64.encodeToString(crypto.encrypt(a.toString()), Base64.NO_WRAP);
             prefs.edit().putString(KEY_ITEMS_ENC, enc)
                     .remove(KEY_ITEMS).remove(LEGACY_KEY_ITEMS).apply();
-        } catch (Exception ignored) {}
+        } catch (Exception e) { Log.w(TAG, "Failed to encrypt/save clipboard history", e); }
     }
     private List<ClipboardItem> sort(List<ClipboardItem> all) { Collections.sort(all,(a,b)-> a.pinned != b.pinned ? (a.pinned ? -1:1) : Long.compare(b.timestamp,a.timestamp)); return all; }
     private void replace(List<ClipboardItem> all, ClipboardItem item) { for(int i=0;i<all.size();i++) if(all.get(i).id.equals(item.id)){all.set(i,item);return;} all.add(item); }
     private void remove(List<ClipboardItem> all,String id) { for(int i=all.size()-1;i>=0;i--)if(all.get(i).id.equals(id))all.remove(i); }
     private void trim(List<ClipboardItem> all) { sort(all); while(all.size()>MAX_ITEMS){ClipboardItem last=all.get(all.size()-1);if(last.pinned||last.todo)break;all.remove(all.size()-1);} }
-    private void migrateLegacyIfNeeded() { if (prefs.contains(KEY_ITEMS) || !prefs.contains(LEGACY_KEY_ITEMS)) return; try { JSONArray legacy=new JSONArray(prefs.getString(LEGACY_KEY_ITEMS,"[]")); for(int i=0;i<legacy.length();i++) add(legacy.getString(i)); }catch(Exception ignored){} }
+    private void migrateLegacyIfNeeded() { if (prefs.contains(KEY_ITEMS) || !prefs.contains(LEGACY_KEY_ITEMS)) return; try { JSONArray legacy=new JSONArray(prefs.getString(LEGACY_KEY_ITEMS,"[]")); for(int i=0;i<legacy.length();i++) add(legacy.getString(i)); }catch(Exception e){ Log.w(TAG, "Failed to migrate legacy clipboard history", e); } }
 }
+//（注：内容由AI生成）

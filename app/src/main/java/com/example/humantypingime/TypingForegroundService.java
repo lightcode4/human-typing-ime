@@ -1,3 +1,15 @@
+/*
+ * TypingForegroundService.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: FIX(i) — add deterministic teardown: onDestroy() removes the
+ *             foreground notification and onTaskRemoved() stops the service, so
+ *             the foreground state never outlives the typing job. (This service
+ *             owns no executor/worker threads — typing runs in the IME — so there
+ *             is no ExecutorService to double-shutdown; stopForeground is itself
+ *             idempotent.)
+ */
+
 package com.example.humantypingime;
 
 import android.app.Notification;
@@ -52,6 +64,18 @@ public class TypingForegroundService extends Service {
         return START_STICKY;
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        stopSelf();
+    }
+
+    @Override
+    public void onDestroy() {
+        stopForeground(STOP_FOREGROUND_REMOVE);
+        super.onDestroy();
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -70,3 +94,4 @@ public class TypingForegroundService extends Service {
         }
     }
 }
+//（注：内容由AI生成）

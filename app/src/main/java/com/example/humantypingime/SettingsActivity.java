@@ -1,3 +1,15 @@
+/*
+ * SettingsActivity.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: FIX(i) — keep the AiRewriteManager (its single-thread ExecutorService) as a field
+ *             and shut it down deterministically in onDestroy with a double-shutdown guard, so a
+ *             destroyed activity no longer leaks the availability-probe executor.
+ * 2026-09-30: HARDEN — log the public-key export failure (technical detail), toast text unchanged.
+ * 2026-09-30: UI — "TYPING RHYTHM" section header; live cadence preview under the sliders;
+ *             Reset defaults button restores the app defaults (Save still persists).
+ */
+
 package com.example.humantypingime;
 
 import android.content.ClipData;
@@ -5,6 +17,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -20,6 +33,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class SettingsActivity extends AppCompatActivity {
 
+    private static final String TAG = "SettingsActivity";
+
     private SharedPreferences prefs;
 
     private Spinner spProfile;
@@ -28,6 +43,11 @@ public class SettingsActivity extends AppCompatActivity {
     private ImageButton btnThemeToggle;
     private TextView tvThemeMode;
     private TextView behavioralStatus;
+    private TextView tvPreview;
+
+    // The availability probe owns a background ExecutorService; released in onDestroy.
+    private AiRewriteManager aiRewrite;
+    private boolean aiReleased;
 
     // Common app packages for quick configuration
     private static final String[] PACKAGE_LABELS = {
@@ -72,6 +92,11 @@ public class SettingsActivity extends AppCompatActivity {
         btnThemeToggle = findViewById(R.id.btn_theme_toggle);
         tvThemeMode = findViewById(R.id.tv_theme_mode);
         Button btnSave = findViewById(R.id.btn_save);
+        tvPreview = findViewById(R.id.tv_preview);
+        Button btnReset = findViewById(R.id.btn_reset);
+        if (btnReset != null) {
+            btnReset.setOnClickListener(v -> resetToDefaults());
+        }
 
         if (btnThemeToggle != null) {
             updateThemeToggle();
@@ -107,6 +132,7 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 tvMin.setText("Min delay: " + progress + " ms");
+                updatePreview();
             }
         });
 
@@ -114,6 +140,7 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 tvMax.setText("Max delay: " + progress + " ms");
+                updatePreview();
             }
         });
 
@@ -121,6 +148,7 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 tvPunct.setText("Punctuation pause: " + progress + " ms");
+                updatePreview();
             }
         });
 
@@ -128,6 +156,7 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 tvTypo.setText("Typo chance: " + progress + "%");
+                updatePreview();
             }
         });
 
@@ -156,6 +185,7 @@ public class SettingsActivity extends AppCompatActivity {
                     }
                     Toast.makeText(this, "Public key copied to clipboard", Toast.LENGTH_LONG).show();
                 } catch (Exception e) {
+                    Log.e(TAG, "Failed to export public key", e);
                     Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
@@ -209,16 +239,12 @@ public class SettingsActivity extends AppCompatActivity {
             swRewrite.setChecked(prefs.getBoolean(HumanTypingIME.KEY_AI_REWRITE, true));
             swRewrite.setOnCheckedChangeListener((button, checked) ->
                     prefs.edit().putBoolean(HumanTypingIME.KEY_AI_REWRITE, checked).apply());
-            AiRewriteManager ai = new AiRewriteManager(this);
-            ai.checkAvailability(available -> {
+            aiRewrite = new AiRewriteManager(this);
+            aiRewrite.checkAvailability(available -> {
                 tvAiStatus.setText(available
                         ? "Available on this device (Gemini Nano, on-device)."
-                        : "Not available on this device — needs AICore (Pixel 8+, Galaxy S24+ and newer flagships).");
-                if (!available) {
-                    swRewrite.setChecked(false);
-                    swRewrite.setEnabled(false);
-                }
-                ai.shutdown();
+                        : aiRewrite.getStatusMessage() + " Open Rewrite to retry model preparation.");
+                shutdownAi();
             });
         }
         updateBehavioralStatus();
@@ -228,6 +254,20 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (behavioralStatus != null) updateBehavioralStatus();
+    }
+
+    /** Shuts down the availability-probe executor exactly once (callback or onDestroy). */
+    private synchronized void shutdownAi() {
+        if (aiRewrite == null || aiReleased) return;
+        aiReleased = true;
+        aiRewrite.shutdown();
+        aiRewrite = null;
+    }
+
+    @Override
+    protected void onDestroy() {
+        shutdownAi();
+        super.onDestroy();
     }
 
     private void updateBehavioralStatus() {
@@ -260,6 +300,7 @@ public class SettingsActivity extends AppCompatActivity {
         tvMax.setText("Max delay: " + max + " ms");
         tvPunct.setText("Punctuation pause: " + punct + " ms");
         tvTypo.setText("Typo chance: " + (int) (typo * 100) + "%");
+        updatePreview();
     }
 
     private void saveProfile() {
@@ -270,6 +311,28 @@ public class SettingsActivity extends AppCompatActivity {
                 .putInt(prefix + HumanTypingIME.KEY_PUNCT_DELAY, sbPunct.getProgress())
                 .putFloat(prefix + HumanTypingIME.KEY_TYPO_PROB, sbTypo.getProgress() / 100f)
                 .apply();
+    }
+
+    /** Live summary of the current slider values; updates on every change. */
+    private void updatePreview() {
+        if (tvPreview == null) return;
+        tvPreview.setText("Sample rhythm: " + sbMin.getProgress() + "–" + sbMax.getProgress()
+                + " ms per key, + up to " + sbPunct.getProgress() + " ms after punctuation, "
+                + sbTypo.getProgress() + "% typo chance");
+    }
+
+    /** Restores the sliders to the app defaults (still requires Save to persist). */
+    private void resetToDefaults() {
+        sbMin.setProgress(HumanTypingIME.DEF_MIN_DELAY);
+        sbMax.setProgress(HumanTypingIME.DEF_MAX_DELAY);
+        sbPunct.setProgress(HumanTypingIME.DEF_PUNCT_DELAY);
+        sbTypo.setProgress((int) (HumanTypingIME.DEF_TYPO_PROB * 100));
+        tvMin.setText("Min delay: " + HumanTypingIME.DEF_MIN_DELAY + " ms");
+        tvMax.setText("Max delay: " + HumanTypingIME.DEF_MAX_DELAY + " ms");
+        tvPunct.setText("Punctuation pause: " + HumanTypingIME.DEF_PUNCT_DELAY + " ms");
+        tvTypo.setText("Typo chance: " + (int) (HumanTypingIME.DEF_TYPO_PROB * 100) + "%");
+        updatePreview();
+        Toast.makeText(this, "Defaults loaded — press Save to apply", Toast.LENGTH_SHORT).show();
     }
 
     private void selectTheme(int mode) {
@@ -297,3 +360,4 @@ public class SettingsActivity extends AppCompatActivity {
         public void onStopTrackingTouch(SeekBar seekBar) {}
     }
 }
+//（注：内容由AI生成）

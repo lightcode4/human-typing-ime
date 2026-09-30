@@ -1,3 +1,10 @@
+/*
+ * TemplateTriggerWatcher.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: unchanged
+ */
+
 package com.example.humantypingime;
 
 public class TemplateTriggerWatcher {
@@ -82,3 +89,4 @@ public class TemplateTriggerWatcher {
         mainHandler.post(() -> listener.onTrigger(t, triggerLen));
     }
 }
+//（注：内容由AI生成）

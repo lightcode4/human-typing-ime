@@ -1,3 +1,10 @@
+/*
+ * SensitivePatternDetector.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: unchanged
+ */
+
 package com.example.humantypingime;
 
 import java.util.regex.Pattern;
@@ -75,3 +82,4 @@ public class SensitivePatternDetector {
         return sum % 10 == 0;
     }
 }
+//（注：内容由AI生成）

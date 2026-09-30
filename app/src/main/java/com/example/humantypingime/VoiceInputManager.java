@@ -1,3 +1,17 @@
+/*
+ * VoiceInputManager.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: FIX(b) — mark recognizer/isListening volatile (cross-thread
+ *             callback fields).
+ * 2026-09-30: FIX(i) — destroy the SpeechRecognizer deterministically: start()
+ *             now destroys any prior session via cancel() instead of leaking it;
+ *             cancel() already nulls the recognizer so destroy() can never run
+ *             twice on the same instance.
+ * 2026-09-30: HARDEN — replace silent empty catch blocks in stop()/cancel()
+ *             with Log.w diagnostics; null-guard the results bundle.
+ */
+
 package com.example.humantypingime;
 
 import android.content.Context;
@@ -6,12 +20,15 @@ import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 public class VoiceInputManager {
+
+    private static final String TAG = "VoiceInputManager";
 
     public interface Callback {
         void onPartial(String text);
@@ -23,8 +40,8 @@ public class VoiceInputManager {
 
     private final Context context;
     private final Callback callback;
-    private SpeechRecognizer recognizer;
-    private boolean isListening = false;
+    private volatile SpeechRecognizer recognizer;
+    private volatile boolean isListening = false;
 
     // Pause detection via RMS dB levels
     private long lastAudioTime = 0L;
@@ -48,7 +65,7 @@ public class VoiceInputManager {
             return;
         }
 
-        stop(); // clean up any existing session
+        cancel(); // destroy any existing session before recreating
 
         recognizer = SpeechRecognizer.createSpeechRecognizer(context);
         recognizer.setRecognitionListener(listener);
@@ -72,23 +89,33 @@ public class VoiceInputManager {
     }
 
     public void stop() {
-        if (recognizer != null) {
+        SpeechRecognizer r = recognizer;
+        if (r != null) {
             try {
-                recognizer.stopListening();
-            } catch (Exception ignored) { }
+                r.stopListening();
+            } catch (Exception e) {
+                Log.w(TAG, "stopListening failed", e);
+            }
         }
         isListening = false;
     }
 
     public void cancel() {
-        if (recognizer != null) {
-            try {
-                recognizer.cancel();
-                recognizer.destroy();
-            } catch (Exception ignored) { }
-                recognizer = null;
-        }
+        SpeechRecognizer r = recognizer;
+        recognizer = null;
         isListening = false;
+        if (r != null) {
+            try {
+                r.cancel();
+            } catch (Exception e) {
+                Log.w(TAG, "Cancel recognizer failed", e);
+            }
+            try {
+                r.destroy();
+            } catch (Exception e) {
+                Log.w(TAG, "Destroy recognizer failed", e);
+            }
+        }
     }
 
     private final RecognitionListener listener = new RecognitionListener() {
@@ -136,9 +163,12 @@ public class VoiceInputManager {
         @Override
         public void onResults(Bundle results) {
             isListening = false;
-            ArrayList<String> matches = results.getStringArrayList(
-                    SpeechRecognizer.RESULTS_RECOGNITION);
-            String raw = (matches != null && !matches.isEmpty()) ? matches.get(0) : "";
+            String raw = "";
+            if (results != null) {
+                ArrayList<String> matches = results.getStringArrayList(
+                        SpeechRecognizer.RESULTS_RECOGNITION);
+                raw = (matches != null && !matches.isEmpty()) ? matches.get(0) : "";
+            }
 
             // Run through post-processor with recorded pause durations
             String processed = TranscriptPostProcessor.process(raw, pauseMarks);
@@ -148,6 +178,7 @@ public class VoiceInputManager {
 
         @Override
         public void onPartialResults(Bundle partialResults) {
+            if (partialResults == null) return;
             ArrayList<String> matches = partialResults.getStringArrayList(
                     SpeechRecognizer.RESULTS_RECOGNITION);
             if (matches != null && !matches.isEmpty()) {
@@ -158,3 +189,4 @@ public class VoiceInputManager {
         @Override public void onEvent(int eventType, Bundle params) { }
     };
 }
+//（注：内容由AI生成）

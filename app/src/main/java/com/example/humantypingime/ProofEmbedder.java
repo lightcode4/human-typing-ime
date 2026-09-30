@@ -1,3 +1,10 @@
+/*
+ * ProofEmbedder.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: unchanged
+ */
+
 package com.example.humantypingime;
 
 import android.util.Base64;
@@ -7,11 +14,11 @@ import java.nio.charset.StandardCharsets;
 public class ProofEmbedder {
 
     // Zero-width characters used to encode bits
-    private static final char ZW_ZERO = '\u200B';  // zero-width space
-    private static final char ZW_ONE  = '\u200C';  // zero-width non-joiner
+    private static final char ZW_ZERO = '​';  // zero-width space
+    private static final char ZW_ONE  = '‌';  // zero-width non-joiner
 
-    private static final String TAG_START = "\u2060"; // word joiner — marks beginning of tag
-    private static final String TAG_END   = "\u2060"; // and end
+    private static final String TAG_START = "⁠"; // word joiner — marks beginning of tag
+    private static final String TAG_END   = "⁠"; // and end
 
     /**
      * Payload format: base64(sigAlg:signature:fingerprint)
@@ -79,3 +86,4 @@ public class ProofEmbedder {
         return new String(out, StandardCharsets.UTF_8);
     }
 }
+//（注：内容由AI生成）

@@ -1,3 +1,11 @@
+/*
+ * BehavioralEnrollActivity.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: UI — clears the passage box after a successful save (only aggregate statistics
+ *             are ever stored) and surfaces the 40-interval target hint.
+ */
+
 package com.example.humantypingime;
 
 import android.os.Bundle;
@@ -24,6 +32,7 @@ public class BehavioralEnrollActivity extends AppCompatActivity {
     private long lastKeyNanos;
     private TextView progressText;
     private ProgressBar progressBar;
+    private EditText passage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,7 +40,7 @@ public class BehavioralEnrollActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_behavioral_enroll);
 
-        EditText passage = findViewById(R.id.et_behavioral_passage);
+        passage = findViewById(R.id.et_behavioral_passage);
         progressText = findViewById(R.id.tv_behavioral_progress);
         progressBar = findViewById(R.id.pb_behavioral_enroll);
         progressBar.setMax(TARGET_INTERVALS);
@@ -83,7 +92,10 @@ public class BehavioralEnrollActivity extends AppCompatActivity {
         }
         new BehavioralProfileStore(this).save(profile);
         intervals.clear();
+        // Wipe the passage box: enrollment keeps only aggregate statistics on disk.
+        if (passage != null) passage.setText("");
         Toast.makeText(this, "Local rhythm profile saved. No text was stored.", Toast.LENGTH_LONG).show();
         finish();
     }
 }
+//（注：内容由AI生成）

@@ -1,3 +1,12 @@
+/*
+ * ProofVerifier.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: HARDEN — explicit null guard on enrolledPubKeyB64 so a missing
+ *             enrollment key returns a structured Result.fail instead of
+ *             reaching Base64.decode with null input.
+ */
+
 package com.example.humantypingime;
 
 import android.util.Base64;
@@ -27,6 +36,8 @@ public class ProofVerifier {
      * @param enrolledPubKeyB64 base64 of the sender's enrolled X.509 public key
      */
     public static Result verify(String text, String enrolledPubKeyB64) {
+        if (enrolledPubKeyB64 == null) return Result.fail("missing enrolled public key");
+
         String payload = ProofEmbedder.extractPayload(text);
         if (payload == null) return Result.fail("no proof tag found");
 
@@ -61,3 +72,4 @@ public class ProofVerifier {
         }
     }
 }
+//（注：内容由AI生成）

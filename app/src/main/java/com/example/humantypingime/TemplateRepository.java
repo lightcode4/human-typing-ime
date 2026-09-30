@@ -1,7 +1,16 @@
+/*
+ * TemplateRepository.java — Human Typing IME (com.example.humantypingime)
+ *
+ * Change log:
+ * 2026-09-30: HARDEN — replace silent empty catch blocks (template JSON parse
+ *             and build failures) with Log.w diagnostics; behavior unchanged.
+ */
+
 package com.example.humantypingime;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -11,6 +20,7 @@ import java.util.List;
 
 public class TemplateRepository {
 
+    private static final String TAG = "TemplateRepository";
     private static final String PREFS = "template_prefs";
     private static final String KEY_TEMPLATES = "templates_json";
 
@@ -42,7 +52,9 @@ public class TemplateRepository {
             for (int i = 0; i < arr.length(); i++) {
                 list.add(Template.fromJson(arr.getJSONObject(i)));
             }
-        } catch (JSONException ignored) { }
+        } catch (JSONException e) {
+            Log.w(TAG, "Failed to parse templates JSON", e);
+        }
         return list;
     }
 
@@ -51,7 +63,9 @@ public class TemplateRepository {
         for (Template t : templates) {
             try {
                 arr.put(t.toJson());
-            } catch (JSONException ignored) { }
+            } catch (JSONException e) {
+                Log.w(TAG, "Failed to build template JSON", e);
+            }
         }
         prefs.edit().putString(KEY_TEMPLATES, arr.toString()).apply();
     }
@@ -91,3 +105,4 @@ public class TemplateRepository {
         }
     }
 }
+//（注：内容由AI生成）

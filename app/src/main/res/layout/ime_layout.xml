@@ -6,7 +6,18 @@
     android:orientation="vertical"
     android:background="@color/bg_keyboard"
     android:padding="@dimen/space_s">
-
+    <!-- Status strip: idle / typing / recording state -->
+    <TextView
+        android:id="@+id/tv_ime_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/space_xs"
+        android:gravity="center_horizontal"
+        android:paddingHorizontal="@dimen/space_s"
+        android:singleLine="true"
+        android:text="Ready"
+        android:textColor="@color/text_secondary"
+        android:textSize="11sp" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -28,7 +39,6 @@
             <TextView style="@style/ImeKeyLabel" android:text="Stop" android:textColor="@color/danger" />
         </LinearLayout>
     </LinearLayout>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -40,7 +50,7 @@
         </LinearLayout>
         <LinearLayout android:id="@+id/btn_mic" style="@style/ImeKeyButton" android:layout_weight="2" android:longClickable="false" android:contentDescription="Hold to speak">
             <ImageView style="@style/ImeKeyIcon" android:src="@drawable/ic_mic" app:tint="@color/text_primary" android:contentDescription="@null" />
-            <TextView style="@style/ImeKeyLabel" android:text="Hold to speak" />
+            <TextView android:id="@+id/tv_mic_label" style="@style/ImeKeyLabel" android:text="Hold to speak" />
         </LinearLayout>
         <LinearLayout android:id="@+id/btn_backspace" style="@style/ImeKeyButton" android:layout_weight="1" android:contentDescription="Delete">
             <ImageView style="@style/ImeKeyIcon" android:src="@drawable/ic_backspace" app:tint="@color/text_primary" android:contentDescription="@null" />
@@ -56,3 +66,4 @@
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
+<!-- （注：内容由AI生成） -->
