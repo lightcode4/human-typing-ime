@@ -104,6 +104,9 @@ public class AiRewriteManager {
                         .setOutputType(outputType(tone))
                         .setLanguage(RewriterOptions.Language.ENGLISH)
                         .build());
+                // AICore can report the feature as available before the
+                // inference engine is fully initialized on the device.
+                rewriter.prepareInferenceEngine().get();
                 RewritingResult result = rewriter.runInference(
                         RewritingRequest.builder(text).build()).get();
                 String out = result.getResults().isEmpty()

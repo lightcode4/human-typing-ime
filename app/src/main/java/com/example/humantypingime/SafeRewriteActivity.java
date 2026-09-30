@@ -128,6 +128,7 @@ public class SafeRewriteActivity extends AppCompatActivity {
             Rewriter rewriter = null;
             try {
                 rewriter = Rewriting.getClient(optionsFor(chosenStyle));
+                rewriter.prepareInferenceEngine().get();
                 RewritingResult result = rewriter.runInference(
                         RewritingRequest.builder(draft).build()).get();
                 String suggestion = result.getResults().isEmpty() ? ""
