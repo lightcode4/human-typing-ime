@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/bg_root" android:fillViewport="true">
   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/space_l">
-    <ImageView android:layout_width="72dp" android:layout_height="72dp" android:layout_gravity="center_horizontal" android:layout_marginTop="@dimen/space_l" android:src="@drawable/ic_launcher_foreground" android:contentDescription="@null"/>
+    <ImageView android:layout_width="72dp" android:layout_height="72dp" android:layout_gravity="center_horizontal" android:layout_marginTop="@dimen/space_l" android:src="@mipmap/ic_launcher" android:contentDescription="@null"/>
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:layout_marginTop="@dimen/space_m" android:text="Human Typing" android:textColor="@color/text_primary" android:textSize="22sp" android:textStyle="bold"/>
     <TextView android:id="@+id/tv_version" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:textColor="@color/text_secondary" android:textSize="@dimen/subtitle_size"/>
     <TextView style="@style/SectionHeader" android:text="FEATURES"/>

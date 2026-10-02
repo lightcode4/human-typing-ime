@@ -36,6 +36,11 @@
 
 - Feature graphic: `assets/human-typing-feature-graphic-1024x500.png`
 - Screenshots: `assets/screenshots/`
-- Icon source: `assets/human-typing-icon-source.png`
+- App icon upload (512×512): `assets/human-typing-play-icon-512.png`
+- App icon master export (1024×1024): `assets/human-typing-play-icon-1024.png`
+- App icon preparation and prompt: `assets/PLAY_ICON_README.md`
+- Adaptive launcher resources: `assets/launcher/README.md`
+- Combined icon asset pack: `assets/HumanTypingIME-icon-assets.zip` (see `assets/ICON_ASSETS_README.md`)
+- Previous icon source (retained): `assets/human-typing-icon-source.png`
 
 Play Console still requires these values to be entered and submitted in the developer account UI.

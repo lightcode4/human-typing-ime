@@ -5,8 +5,11 @@
 - [x] `com.scottomedo.humantyping` selected as the permanent application ID
 - [x] Release APK produced
 - [x] Release APK verified with APK Signature Scheme v2
-- [ ] Re-run `:app:assembleRelease` after the Gradle wrapper lock is cleared
-- [ ] Run `:app:lint` and resolve any release findings
+- [x] Re-run `:app:assembleRelease` with the full-keycap adaptive launcher assets (2026-10-02)
+- [x] Run `:app:testReleaseUnitTest` (12 tests passed, 2026-10-02)
+- [x] Run `:app:lintRelease` (0 errors, 297 warnings, 2026-10-02)
+- [x] Verify all five icon density sets, transparency, and absence of legacy-round bitmap files in the APK (2026-10-02)
+- [ ] Review and resolve remaining lint warnings before publishing
 - [ ] Increment `versionCode` for every Play upload after the first
 
 ## Device QA
@@ -31,6 +34,7 @@ Test on at least one Android 13/14+ physical device and one emulator.
 ## Play Store
 
 - [x] Publish `PRIVACY_POLICY.md` at a stable HTTPS URL and replace its placeholder
+- [x] Prepare the 512×512 app icon and 1024×1024 master export
 - [ ] Upload 512×512 app icon
 - [ ] Upload 1024×500 feature graphic
 - [x] Capture at least two phone screenshots from the release build
